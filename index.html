@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Конструктор отчётов родителям (пробный урок) — Pinterest style (PNG)</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<style>
+  :root{
+    --ink:#243037; --muted:#6b7280; --border:#e5e7eb; --bg:#f7fafc; --card:#fff;
+    --brand:#ff6a3d; --brand2:#ff9f1a; --ring:rgba(255,106,61,.28);
+    --radius:18px; --shadow:0 10px 30px rgba(17,24,39,.08);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font:16px/1.5 'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+  }
+  .wrap{max-width:960px;margin:24px auto;padding:0 14px 80px}
+
+  /* HERO */
+  .hero{
+    display:flex;justify-content:space-between;align-items:center;gap:16px;
+    padding:20px;border-radius:24px;
+    background:linear-gradient(120deg,#ffe0c2,#ffc6d9,#c9f3dd);
+    box-shadow:var(--shadow);margin-bottom:20px
+  }
+  .hero-title{margin:0;font-size:1.9rem;font-weight:800}
+  .hero-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .author{
+    font-weight:700;background:#fff;border:1px solid var(--border);
+    padding:6px 10px;border-radius:999px
+  }
+  .author a{color:inherit;text-decoration:none}
+  .sub{
+    border:0;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;
+    padding:10px 14px;border-radius:12px;
+    font-weight:800;cursor:pointer;
+    box-shadow:0 6px 14px rgba(255,106,61,.25);transition:.2s
+  }
+  .sub:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(255,106,61,.35)}
+
+  /* Cards & layout */
+  .card{
+    background:linear-gradient(#fff,#fff) padding-box,
+               radial-gradient(120% 120% at 0% 0%, #ffe9e0, #e8f9f3) border-box;
+    border:1px solid rgba(255,255,255,.7);
+    border-radius:var(--radius);
+    padding:16px;box-shadow:var(--shadow);transition:.2s;
+  }
+  .card:hover{box-shadow:0 14px 34px rgba(17,24,39,.12)}
+  h2{
+    margin:0 0 12px;
+    font-size:0.9rem;
+    text-transform:uppercase;
+    color:var(--muted);
+    letter-spacing:.08em
+  }
+  .grid{display:grid;gap:16px}
+  .grid-2{grid-template-columns:1fr 1fr}
+  .row{
+    display:grid;
+    grid-template-columns:minmax(160px,220px) 1fr;
+    gap:12px;align-items:center
+  }
+
+  input,textarea{
+    width:100%;padding:10px;
+    border:1px solid var(--border);
+    border-radius:12px;background:#fff;
+    transition:.2s;min-width:0;font-size:15px
+  }
+  input:focus,textarea:focus{
+    outline:none;border-color:var(--brand);
+    box-shadow:0 0 0 4px var(--ring)
+  }
+  textarea{min-height:110px;resize:vertical}
+
+  .btn{
+    border:0;
+    background:linear-gradient(135deg,var(--brand),var(--brand2));
+    color:#fff;padding:10px 14px;border-radius:12px;
+    font-weight:700;cursor:pointer;
+    box-shadow:0 6px 14px rgba(255,106,61,.25);transition:.2s
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(255,106,61,.35)}
+  .btn.add{
+    background:#fff;color:var(--brand);
+    border:2px dashed rgba(255,106,61,.6);
+    box-shadow:none;
+  }
+  .btn.add:hover{background:rgba(255,154,94,.16)}
+  .btn.outline{
+    background:#fff;
+    color:var(--brand);
+    border:2px solid rgba(255,106,61,.7);
+    box-shadow:none;
+  }
+  .btn.outline:hover{
+    background:rgba(255,154,94,.12);
+    transform:translateY(-2px);
+    box-shadow:0 6px 16px rgba(255,106,61,.25);
+  }
+  .btn[disabled]{
+    opacity:0.6;
+    cursor:not-allowed;
+    box-shadow:none;
+    transform:none;
+  }
+
+  .list{display:grid;gap:10px;margin-top:10px}
+  .item{
+    display:grid;grid-template-columns:1fr auto;gap:10px;align-items:flex-start;
+    background:#fffaf7;padding:10px;border-radius:12px;border:1px solid #ffe0d1
+  }
+
+  /* Textarea wrapper + counter */
+  .ta-wrap{position:relative}
+  .ta-wrap textarea{padding-right:78px}
+  .counter{
+    position:absolute;right:10px;bottom:8px;
+    font-size:11px;color:var(--muted);
+    background:#fff; padding:2px 6px;
+    border-radius:999px;border:1px solid rgba(148,163,184,.35);
+  }
+
+  .empty-note{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:10px 12px;border-radius:12px;
+    border:2px dashed rgba(255,106,61,.35);
+    background:rgba(255,154,94,.12);
+    color:#7c2d12;font-weight:800
+  }
+  .empty-note::before{content:"ℹ️"}
+  #notice{
+    display:none;margin:10px 0;padding:10px 12px;
+    border:1px solid #fecaca;background:#fff1f2;
+    color:#7f1d1d;border-radius:12px;font-weight:700
+  }
+
+  .hidden{display:none !important;}
+
+  /* Report */
+  #finalReport{display:none;margin-top:18px}
+  .report{
+    background:#fff;border:1px solid var(--border);
+    border-radius:22px;box-shadow:var(--shadow);overflow:hidden
+  }
+  .report-header{
+    padding:20px;
+    background:linear-gradient(120deg,#ffe0c2,#ffc6d9,#c9f3dd);
+  }
+  .pill-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .pill{
+    display:inline-flex;gap:6px;align-items:center;
+    padding:6px 10px;background:#fff;
+    border:1px solid var(--border);border-radius:999px;
+    font-weight:700
+  }
+  .report-body{padding:20px;display:grid;gap:18px}
+  .section{
+    border:1px dashed var(--border);
+    border-radius:16px;padding:14px;background:#fff
+  }
+  .section h3{margin:0 0 8px;font-size:15px;color:#111827}
+  .ul{margin:0;padding-left:22px}
+  .ul li{
+    margin:6px 0;
+    padding:6px 10px;
+    background:#fff7f3;
+    border-radius:8px;
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.04)
+  }
+
+  @media (max-width:900px){
+    .grid-2{grid-template-columns:1fr}
+    .row{grid-template-columns:1fr}
+    .hero{flex-direction:column;align-items:flex-start}
+    .hero-title{font-size:1.7rem}
+  }
+  @media (max-width:520px){
+    body{font-size:15px}
+    .wrap{padding:0 10px 60px}
+    .btn,.sub{padding:10px 12px}
+    .item{grid-template-columns:1fr}
+    .item .btn{width:100%}
+    .pill{font-size:.85rem}
+  }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+  <!-- HERO -->
+  <div class="hero">
+    <h1 class="hero-title">Конструктор отчётов по пробному уроку</h1>
+    <div class="hero-right">
+      <span class="author">Автор: <a href="https://t.me/lera_easy_math" target="_blank" rel="noopener">@lera_easy_math</a></span>
+      <a class="sub" href="https://t.me/lera_easy_math" target="_blank" rel="noopener">Подписаться</a>
+    </div>
+  </div>
+
+  <div id="notice"></div>
+
+  <div class="grid">
+    <!-- КТО И КОГДА -->
+    <div class="card">
+      <h2>Кто и когда</h2>
+      <div class="grid grid-2">
+        <div class="row">
+          <div>Педагог</div>
+          <input id="teacher" placeholder="Имя Отчество">
+        </div>
+        <div class="row">
+          <div>Дата пробного урока</div>
+          <input id="date" placeholder="Например, 12.12.2025">
+        </div>
+        <div class="row">
+          <div>Имя ученика</div>
+          <input id="student" placeholder="Имя и фамилия">
+        </div>
+        <div class="row">
+          <div>Класс</div>
+          <input id="grade" type="number" min="1" max="11" step="1" inputmode="numeric" placeholder="Напр., 7">
+        </div>
+      </div>
+    </div>
+
+    <!-- Сильные стороны -->
+    <div class="card">
+      <h2>Сильные стороны ученика</h2>
+      <div id="strengths" class="list"></div>
+      <button class="btn add" id="addStrength" type="button" style="margin-top:8px">+ Добавить сильную сторону</button>
+      <div class="empty-note" style="margin-top:10px">
+        Можно добавить несколько пунктов: учебные навыки, отношение к уроку, характер и т.п.
+      </div>
+    </div>
+
+    <!-- Зоны роста -->
+    <div class="card">
+      <h2>Зоны роста (сложности)</h2>
+      <div id="weaknesses" class="list"></div>
+      <button class="btn add" id="addWeakness" type="button" style="margin-top:8px">+ Добавить зону роста</button>
+      <div class="empty-note" style="margin-top:10px">
+        Формулируем бережно: над какими навыками и темами планируем работать.
+      </div>
+    </div>
+
+    <!-- План развития -->
+    <div class="card">
+      <h2>План развития на ближайший месяц</h2>
+      <div class="ta-wrap">
+        <textarea id="plan"
+          placeholder="Что будем делать в течение следующего месяца: темы, формат занятий, акценты и ориентиры по результатам. Можно писать много текста."></textarea>
+        <span class="counter"></span>
+      </div>
+    </div>
+
+    <!-- Комментарий родителю -->
+    <div class="card">
+      <h2>Комментарий родителю</h2>
+      <div class="ta-wrap">
+        <textarea id="comment"
+          placeholder="Коротко и по-человечески: что уже получается, что важно поддержать дома, как вы можете помочь ребёнку."></textarea>
+        <span class="counter"></span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:center;gap:10px;margin-top:14px;flex-wrap:wrap">
+    <button class="btn" id="generate" type="button">Сформировать отчёт</button>
+    <button class="btn outline" id="download" type="button" disabled>Скачать PNG</button>
+  </div>
+
+  <!-- ОТЧЁТ -->
+  <div id="finalReport">
+    <div class="report" id="reportCard">
+      <div class="report-header">
+        <h2 style="margin:0">Отчёт по результатам пробного урока</h2>
+        <div class="pill-row">
+          <span class="pill">Педагог: <span id="fr-teacher"></span></span>
+          <span class="pill">Ученик: <span id="fr-student"></span>, <span id="fr-grade"></span> класс</span>
+          <span class="pill">Дата пробного урока: <span id="fr-date"></span></span>
+        </div>
+      </div>
+      <div class="report-body">
+        <div class="section">
+          <h3>Сильные стороны ученика</h3>
+          <div id="fr-strengths">—</div>
+        </div>
+        <div class="section">
+          <h3>Зоны роста</h3>
+          <div id="fr-weaknesses">—</div>
+        </div>
+        <div class="section">
+          <h3>План развития на ближайший месяц</h3>
+          <div id="fr-plan">—</div>
+        </div>
+        <div class="section">
+          <h3>Комментарий родителю</h3>
+          <div id="fr-comment">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const $  = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+
+  function showError(msg){
+    const n=$('#notice');
+    n.textContent=msg;
+    n.style.display='block';
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function clearError(){
+    const n=$('#notice');
+    n.textContent='';
+    n.style.display='none';
+  }
+
+  /* ===== Счётчики символов (без ограничений) ===== */
+  function bindCharCount(el){
+    const wrap = el.closest('.ta-wrap');
+    if(!wrap) return;
+    const counter = wrap.querySelector('.counter');
+
+    const update = () => {
+      const len = el.value.length;
+      if(!counter) return;
+      counter.textContent = String(len);
+      counter.classList.remove('near','over');
+    };
+
+    el.addEventListener('input', update, {passive:true});
+    update();
+  }
+
+  /* ===== Динамические пункты (сильные/слабые стороны) ===== */
+  function makeTextItem(placeholder){
+    const d=document.createElement('div');
+    d.className='item';
+    d.innerHTML = `
+      <div class="ta-wrap">
+        <textarea placeholder="${placeholder}"></textarea>
+        <span class="counter"></span>
+      </div>
+      <button class="btn add removeBtn" type="button">Удалить</button>
+    `;
+    const ta = d.querySelector('textarea');
+    bindCharCount(ta);
+    return d;
+  }
+
+  function addStrength(){
+    const list = $('#strengths');
+    const item = makeTextItem(
+      'Например: быстро включается в работу, не боится пробовать…'
+    );
+    list.appendChild(item);
+  }
+
+  function addWeakness(){
+    const list = $('#weaknesses');
+    const item = makeTextItem(
+      'Например: путается в знаках, нужна поддержка с базой…'
+    );
+    list.appendChild(item);
+  }
+
+  /* Привязка кнопок */
+  function bindStaticButtons(){
+    const btnStrength = $('#addStrength');
+    const btnWeakness = $('#addWeakness');
+    if(btnStrength && !btnStrength._bound){
+      btnStrength.addEventListener('click', addStrength);
+      btnStrength._bound = true;
+    }
+    if(btnWeakness && !btnWeakness._bound){
+      btnWeakness.addEventListener('click', addWeakness);
+      btnWeakness._bound = true;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    bindStaticButtons();
+
+    // Счётчики для уже существующих больших полей
+    $$('#plan, #comment').forEach(bindCharCount);
+
+    // По умолчанию добавим по одному пункту в каждую группу
+    addStrength();
+    addWeakness();
+  });
+
+  // Удаление пункта
+  document.addEventListener('click', e=>{
+    if(e.target.classList?.contains('removeBtn')){
+      e.target.closest('.item')?.remove();
+    }
+  });
+
+  /* ===== Генерация отчёта ===== */
+  $('#generate').addEventListener('click', async ()=>{
+    clearError();
+
+    const teacher = $('#teacher').value.trim();
+    const date    = $('#date').value.trim();
+    const student = $('#student').value.trim();
+    const grade   = Number($('#grade').value) || 0;
+
+    if(!teacher) return showError('Укажите имя педагога');
+    if(!date)    return showError('Укажите дату пробного урока');
+    if(!student) return showError('Укажите имя ученика');
+    if(!grade)   return showError('Укажите класс (число)');
+
+    // Сильные стороны
+    const strengths = $$('#strengths .item textarea')
+      .map(t=>t.value.trim()).filter(Boolean);
+    // Зоны роста
+    const weaknesses = $$('#weaknesses .item textarea')
+      .map(t=>t.value.trim()).filter(Boolean);
+
+    const plan    = $('#plan').value.trim();
+    const comment = $('#comment').value.trim();
+
+    // Заполнение шапки
+    $('#fr-teacher').textContent = teacher;
+    $('#fr-student').textContent = student;
+    $('#fr-grade').textContent   = String(grade);
+    $('#fr-date').textContent    = date;
+
+    // Секции
+    $('#fr-strengths').innerHTML = strengths.length
+      ? `<ul class="ul">${strengths.map(s=>`<li>${s}</li>`).join('')}</ul>`
+      : '—';
+
+    $('#fr-weaknesses').innerHTML = weaknesses.length
+      ? `<ul class="ul">${weaknesses.map(s=>`<li>${s}</li>`).join('')}</ul>`
+      : '—';
+
+    $('#fr-plan').textContent    = plan || '—';
+    $('#fr-comment').textContent = comment || '—';
+
+    // Показать отчёт
+    $('#finalReport').style.display='block';
+    document.getElementById('reportCard').scrollIntoView({behavior:'smooth'});
+
+    // Разрешаем скачивание
+    const dl = $('#download');
+    if(dl) dl.disabled = false;
+  });
+
+  /* ===== Скачивание PNG ===== */
+  $('#download').addEventListener('click', async ()=>{
+    clearError();
+    const reportVisible = $('#finalReport').style.display !== 'none';
+    if(!reportVisible){
+      return showError('Сначала сформируйте отчёт, затем скачайте PNG.');
+    }
+
+    try{
+      const card=document.getElementById('reportCard');
+      const canvas=await html2canvas(card,{
+        scale:2,
+        backgroundColor:null,
+        windowWidth:document.documentElement.offsetWidth
+      });
+      const url=canvas.toDataURL('image/png');
+      const student = $('#student').value.trim();
+      const date    = $('#date').value.trim();
+      const studentSafe=(student||'Ученик').replace(/\s+/g,'_');
+      const dateSafe   =(date   ||'Дата').replace(/\s+/g,'_').replace(/[.:]/g,'-');
+      const a=document.createElement('a');
+      a.href=url;
+      a.download=`Отчёт_пробный_${studentSafe}_${dateSafe}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }catch(e){
+      console.error(e);
+      showError('PNG не удалось сохранить автоматически. Попробуйте ещё раз.');
+    }
+  });
+</script>
+</body>
+</html>
